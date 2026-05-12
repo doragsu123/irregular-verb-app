@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+    
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['email', 'totalTests', 'totalQuestions', 'correctAnswers', 'updatedAt'])
+        && data.keys().size() == 5
+        && data.email is string && data.email.size() <= 200
+        && data.totalTests is int
+        && data.totalQuestions is int
+        && data.correctAnswers is int
+        && data.updatedAt is string;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming());
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUserProfile(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['totalTests', 'totalQuestions', 'correctAnswers', 'updatedAt'])
+      );
+    }
+    
+    function isValidVerbProgress(data, userId) {
+      return data.keys().hasAll(['userId', 'verbId', 'correct', 'total', 'updatedAt'])
+        && data.keys().size() == 5
+        && data.userId == userId
+        && data.verbId is string && data.verbId.size() <= 100
+        && data.correct is int
+        && data.total is int
+        && data.updatedAt is string;
+    }
+
+    match /users/{userId}/verbStats/{verbId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(verbId) && isValidVerbProgress(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(verbId) && isValidVerbProgress(incoming(), userId) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['correct', 'total', 'updatedAt'])
+      );
+    }
+  }
+}

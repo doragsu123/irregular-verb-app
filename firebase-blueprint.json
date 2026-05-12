@@ -1,0 +1,40 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user data including learning progress",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "totalTests": { "type": "integer" },
+        "totalQuestions": { "type": "integer" },
+        "correctAnswers": { "type": "integer" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "totalTests", "totalQuestions", "correctAnswers", "updatedAt"]
+    },
+    "VerbProgress": {
+      "title": "Verb Progress",
+      "description": "Stores stats for a specific verb",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "verbId": { "type": "string" },
+        "correct": { "type": "integer" },
+        "total": { "type": "integer" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "verbId", "correct", "total", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile with top-level stats"
+    },
+    "users/{userId}/verbStats/{verbId}": {
+      "schema": { "$ref": "#/entities/VerbProgress" },
+      "description": "Per-verb progress stats for a user"
+    }
+  }
+}
