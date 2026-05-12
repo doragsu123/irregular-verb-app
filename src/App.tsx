@@ -92,7 +92,7 @@ export default function App() {
         {currentScreen === 'table_weak' && <TableTest mode="weak" verbStats={progress.verbStats} count={questionCount} onFinish={(s, t, r) => handleFinish(s, t, '表形式テスト(苦手優先)', r)} onToggleWeak={toggleManualWeak} onRemoveWeak={removeManualWeak} />}
         {currentScreen === 'table_choice' && <TableTestChoice onStart={(selected) => { setSelectedVerbsForTable(selected); setCurrentScreen('table_test_custom'); }} />}
         {currentScreen === 'table_test_custom' && <TableTest mode="custom" customVerbs={selectedVerbsForTable} verbStats={progress.verbStats} count={selectedVerbsForTable.length} onFinish={(s, t, r) => handleFinish(s, t, '表形式テスト(選択式)', r)} onToggleWeak={toggleManualWeak} onRemoveWeak={removeManualWeak} />}
-        {currentScreen === 'list' && <VerbList progress={progress} voiceURI={voiceURI} />}
+        {currentScreen === 'list' && <VerbList progress={progress} voiceURI={voiceURI} onToggleWeak={toggleManualWeak} />}
         {currentScreen === 'result' && <Result score={lastScore} total={totalQuestions} testType={currentTestType} onRestart={() => setCurrentScreen('home')} />}
       </main>
     </div>

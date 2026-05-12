@@ -1,14 +1,15 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Search, TrendingUp, CheckCircle2, XCircle, CircleDashed, Volume2, Play, Settings, Square } from 'lucide-react';
-import { verbs } from '../data/verbs';
+import { Search, TrendingUp, CheckCircle2, XCircle, CircleDashed, Volume2, Play, Settings, Square, Flag } from 'lucide-react';
+import { verbs, Verb } from '../data/verbs';
 import type { Progress } from '../types';
 
 interface VerbListProps {
   progress: Progress;
   voiceURI: string | null;
+  onToggleWeak?: (verbId: string) => void;
 }
 
-export default function VerbList({ progress, voiceURI }: VerbListProps) {
+export default function VerbList({ progress, voiceURI, onToggleWeak }: VerbListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [patternFilter, setPatternFilter] = useState<string>('all');
   const [intervalSec, setIntervalSec] = useState<number>(1.0);
@@ -203,6 +204,8 @@ export default function VerbList({ progress, voiceURI }: VerbListProps) {
               <tr className="border-b border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
                 <th className="pb-3 font-medium pl-4 w-12">番号</th>
                 <th className="pb-3 font-medium">状況</th>
+                <th className="pb-3 font-medium text-center">音声</th>
+                <th className="pb-3 font-medium">苦手</th>
                 <th className="pb-3 font-medium">原形</th>
                 <th className="pb-3 font-medium">過去形</th>
                 <th className="pb-3 font-medium">過去分詞</th>
@@ -218,23 +221,36 @@ export default function VerbList({ progress, voiceURI }: VerbListProps) {
                   <tr key={verb.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                     <td className="py-3 pl-4 text-gray-400 dark:text-gray-500 font-mono">{verbIndex}</td>
                     <td className="py-3 pl-2">
-                      <div className="flex items-center gap-2">
-                        <div className={`inline-flex items-center justify-center w-20 gap-1 px-1 py-1 rounded-md text-xs font-medium ${mastery.bg} ${mastery.color}`}>
-                          {mastery.icon}
-                          <span>{mastery.label}</span>
-                        </div>
-                        <button
-                          onClick={() => playSequence(verb)}
-                          className={`p-1.5 rounded-full transition-colors ${
-                            playingVerbId === verb.id 
-                              ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
-                              : 'text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30'
-                          }`}
-                          title="3活用を連続再生"
-                        >
-                          {playingVerbId === verb.id ? <Square size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
-                        </button>
-                      </div>
+                       <div className={`inline-flex items-center justify-center w-20 gap-1 px-1 py-1 rounded-md text-xs font-medium ${mastery.bg} ${mastery.color}`}>
+                         {mastery.icon}
+                         <span>{mastery.label}</span>
+                       </div>
+                    </td>
+                    <td className="py-3 text-center">
+                       <button
+                         onClick={() => playSequence(verb)}
+                         className={`p-1.5 rounded-full transition-colors ${
+                           playingVerbId === verb.id 
+                             ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
+                             : 'text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30'
+                         }`}
+                         title="3活用を連続再生"
+                       >
+                         {playingVerbId === verb.id ? <Square size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+                       </button>
+                    </td>
+                    <td className="py-3">
+                      <button
+                        onClick={() => onToggleWeak?.(verb.id)}
+                        className={`p-1.5 rounded-full transition-colors ${
+                          progress.verbStats[verb.id]?.isManualWeak
+                            ? 'text-red-500 bg-red-50 dark:bg-red-900/30'
+                            : 'text-gray-300 dark:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
+                        title={progress.verbStats[verb.id]?.isManualWeak ? "苦手から外す" : "苦手に追加する"}
+                      >
+                        <Flag size={16} fill={progress.verbStats[verb.id]?.isManualWeak ? "currentColor" : "none"} />
+                      </button>
                     </td>
                     <td className="py-3">
                       <button 

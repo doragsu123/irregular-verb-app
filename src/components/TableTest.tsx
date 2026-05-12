@@ -27,6 +27,8 @@ export default function TableTest({ onFinish, count, mode, verbStats, customVerb
   const [questions, setQuestions] = useState<Verb[]>([]);
   const [rowStates, setRowStates] = useState<Record<string, RowState>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [finalScore, setFinalScore] = useState<number>(0);
+  const [testResults, setTestResults] = useState<{ verbId: string, isCorrect: boolean }[]>([]);
 
   useEffect(() => {
     let selected: Verb[] = [];
@@ -100,11 +102,12 @@ export default function TableTest({ onFinish, count, mode, verbStats, customVerb
       return { verbId: verb.id, isCorrect };
     });
     
+    setTestResults(finalResults);
+    setFinalScore(newScore);
     setIsSubmitted(true);
     
-    // Auto finish after short delay
-    setTimeout(() => {
-      if (mode === 'weak' && onRemoveWeak) {
+    if (mode === 'weak' && onRemoveWeak) {
+      setTimeout(() => {
         finalResults.forEach(r => {
           if (r.isCorrect) {
             const stat = verbStats[r.verbId];
@@ -112,22 +115,20 @@ export default function TableTest({ onFinish, count, mode, verbStats, customVerb
               const currentManualCount = stat.manualCorrectCount || 0;
               if (currentManualCount + 1 >= 2) {
                 const verbBase = questions.find(v => v.id === r.verbId)?.base || '';
-                // Need to use timeout to let React render and state update, though window.confirm is blocking.
-                // Using a small delay via setTimeout helps avoid blocking the UI update for correct colors.
-                setTimeout(() => {
-                   const answer = window.confirm(`「${verbBase}」 は2回連続で正解しました！もう解けますか？\n（[OK]を押すと苦手マークを解除します）`);
-                   if (answer) {
-                     onRemoveWeak(r.verbId);
-                   }
-                }, 100);
+                const answer = window.confirm(`「${verbBase}」 は2回連続で正解しました！もう解けますか？\n（[OK]を押すと苦手マークを解除します）`);
+                if (answer) {
+                  onRemoveWeak(r.verbId);
+                }
               }
             }
           }
         });
-      }
+      }, 100);
+    }
+  };
 
-      onFinish(newScore, questions.length, finalResults);
-    }, 2500);
+  const handleNext = () => {
+    onFinish(finalScore, questions.length, testResults);
   };
 
   if (questions.length === 0) return null;
@@ -223,16 +224,23 @@ export default function TableTest({ onFinish, count, mode, verbStats, customVerb
         </div>
       </div>
       
-      {!isSubmitted && (
-        <div className="flex justify-center flex-col items-center gap-4">
+      <div className="flex justify-center flex-col items-center gap-4">
+        {!isSubmitted ? (
           <button
             onClick={handleSubmit}
-            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors text-lg disabled:opacity-50"
+            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors text-lg"
           >
             答え合わせ
           </button>
-        </div>
-      )}
+        ) : (
+          <button
+            onClick={handleNext}
+            className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-sm transition-colors text-lg"
+          >
+            結果を見る
+          </button>
+        )}
+      </div>
     </div>
   );
 }
